@@ -19,38 +19,14 @@ This skill applies automatically when:
 
 ## Phase 1: Team Context Gathering (Required at Task Start)
 
-Before starting any work, you **MUST** perform the following:
+Before starting any work, you **MUST** do the following:
 
-### 1. Identify Team Members
-```bash
-# Read team config — identify all members and their roles
-cat ~/.claude/teams/{teamName}/config.json
-```
+1. **Check TaskList** — identify all tasks, their owners, statuses, and dependencies (blockedBy/blocks)
+2. **Identify your peers** — from the task list, determine who is working on what
+3. **Identify dependencies** — which tasks block yours? Which tasks does yours unblock?
+4. **Read any delivered messages** — messages from teammates are delivered automatically; respond to any pending ones before starting work
 
-Extract from the result:
-- **All member names and roles** — these are your peers
-- Which members work in the same domain/area as you
-
-### 2. Identify Current Work in Progress
-```bash
-# Check all task files
-ls ~/.claude/teams/{teamName}/tasks/
-# Read each task file
-cat ~/.claude/teams/{teamName}/tasks/*.json
-```
-
-Extract from the result:
-- **Who is working on what** (owner field)
-- **Which tasks have dependencies on my task** (blockedBy, blocks fields)
-- **Whose blockers will my task completion resolve**
-
-### 3. Check My Inbox
-```bash
-# Check messages sent to me
-cat ~/.claude/teams/{teamName}/inboxes/{myName}.json
-```
-
-If there are unread messages, you **MUST** respond to them.
+Do NOT skip this step. Understanding the team context prevents duplicate work and missed handoffs.
 
 ## Phase 2: Impact Analysis
 
