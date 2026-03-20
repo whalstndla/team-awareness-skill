@@ -17,7 +17,11 @@ This skill makes agents:
 ## Install
 
 ```bash
+# Claude Code only
 npx skills add whalstndla/team-awareness-skill -g -y
+
+# All agents (Claude Code, Codex, etc.)
+npx skills add whalstndla/team-awareness-skill -g -y --agent '*'
 ```
 
 Or manually:
