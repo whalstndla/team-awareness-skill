@@ -17,10 +17,13 @@ This skill makes agents:
 ## Install
 
 ```bash
-curl -sL https://raw.githubusercontent.com/whalstndla/team-awareness-skill/main/install.sh | bash
+npx skills add whalstndla/team-awareness-skill -g -y
 ```
 
-Or manually copy `SKILL.md` to `~/.claude/skills/team-awareness/`.
+Or manually:
+```bash
+curl -sL https://raw.githubusercontent.com/whalstndla/team-awareness-skill/main/install.sh | bash
+```
 
 ## What It Does
 
