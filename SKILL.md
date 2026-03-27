@@ -10,21 +10,29 @@ This skill ensures team agents communicate directly with relevant peers rather t
 
 ## Trigger Conditions
 
-This skill applies automatically when:
-- Spawned as a team agent (team task start)
-- Assigned a new task
-- Completing a task
-- Encountering a blocker
-- Needing another member's work output
+This skill auto-triggers when the skill description matches any of these contexts:
+- You are a team agent (spawned via `Agent` tool with a team)
+- You are starting, completing, or blocked on a task
+- You need another member's work output
+
+## How Messages Work
+
+Messages from teammates are **delivered automatically** into your conversation context via `SendMessage`. You do NOT poll or check an inbox — messages simply appear in your conversation when they arrive.
 
 ## Phase 1: Team Context Gathering (Required at Task Start)
 
-Before starting any work, you **MUST** do the following:
+Before starting any work, you **MUST** call `TaskList` to understand the team state:
 
-1. **Check TaskList** — identify all tasks, their owners, statuses, and dependencies (blockedBy/blocks)
-2. **Identify your peers** — from the task list, determine who is working on what
-3. **Identify dependencies** — which tasks block yours? Which tasks does yours unblock?
-4. **Read any delivered messages** — messages from teammates are delivered automatically; respond to any pending ones before starting work
+```
+Tool: TaskList (no parameters)
+→ Returns: id, subject, status, owner, blockedBy for each task
+```
+
+From the result:
+1. **Identify your peers** — the `owner` field shows who is working on what
+2. **Identify dependencies** — `blockedBy` shows which tasks block yours; find tasks where yours appears in their `blockedBy` to see what you unblock
+3. **Use `TaskGet(taskId)`** for full details (description, comments) on any task you need to understand
+4. **Respond to any pending messages** that arrived in your conversation before starting work
 
 Do NOT skip this step. Understanding the team context prevents duplicate work and missed handoffs.
 
@@ -43,22 +51,33 @@ Analyze the scope of impact your work has on others:
 
 ## Phase 3: Direct Communication
 
+Use `SendMessage` to communicate with peers. Always specify the teammate's **name** (from the `owner` field in TaskList) in the `to` parameter:
+
+```
+Tool: SendMessage
+  to: "teammate-name"       ← peer's name (NOT UUID)
+  summary: "brief preview"  ← 5-10 words shown in UI
+  message: "full content"   ← the actual message
+```
+
+To broadcast to all teammates (use sparingly): `to: "*"`
+
 ### When to Message Peers Directly (Do NOT route through leader)
 
 1. **My work output is needed by another member**
-   → Message them directly: "Done. Here's where to find it."
+   → `SendMessage(to: "peer-name", summary: "task X complete", message: "Done. Output at src/foo.js")`
 
 2. **I need another member's work output**
-   → Message them directly: "I need X. When will it be ready?"
+   → `SendMessage(to: "peer-name", summary: "need API spec", message: "I need the API spec for X. When will it be ready?")`
 
 3. **Another member is modifying the same file/module**
-   → Message them directly: "I'm also working on this file. Let's coordinate."
+   → `SendMessage(to: "peer-name", summary: "coordinate on shared file", message: "I'm also modifying src/shared.js. Let's coordinate.")`
 
 4. **I need a code review**
-   → Message the domain peer directly with a review request
+   → `SendMessage(to: "peer-name", summary: "review request", message: "Please review my changes in src/feature.js")`
 
 5. **I found a bug or issue**
-   → Message the code owner directly with a report
+   → `SendMessage(to: "peer-name", summary: "bug in module X", message: "Found a bug in src/module.js:42 — details: ...")`
 
 ### When to Report to Leader Only
 
@@ -71,12 +90,13 @@ Analyze the scope of impact your work has on others:
 
 When completing a task:
 
-1. **Check the `blocks` field** — Does my task unblock other tasks?
-2. If yes, **message the owner of each blocked task directly**:
+1. **Call `TaskList`** again — check the `blockedBy` fields to find tasks that list yours
+2. If your task unblocks others, **`SendMessage` to each blocked task's owner**:
    - What was completed
    - Where to find the output (file paths, branches, etc.)
    - Context needed for handoff
-3. Send only a brief completion notice to the leader
+3. **Update your task status** via `TaskUpdate(taskId, status: "completed")`
+4. Send only a brief completion notice to the leader
 
 ## Anti-Patterns: Message Discipline
 

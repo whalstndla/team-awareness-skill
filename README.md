@@ -9,9 +9,9 @@ By default, Claude Code team agents only communicate with whoever spawned them (
 ## Solution
 
 This skill makes agents:
-1. **Gather team context** at task start (read config, tasks, inbox)
+1. **Gather team context** at task start via `TaskList` / `TaskGet` tools
 2. **Identify relevant peers** based on task dependencies and shared files
-3. **Message peers directly** instead of routing through the leader
+3. **Message peers directly** via `SendMessage` instead of routing through the leader
 4. **Avoid conversation loops** with anti-pattern rules
 
 ## Install
@@ -33,9 +33,9 @@ curl -sL https://raw.githubusercontent.com/whalstndla/team-awareness-skill/main/
 
 | Phase | Action |
 |-------|--------|
-| **Context Gathering** | Reads team config, tasks, and inbox at task start |
+| **Context Gathering** | Calls `TaskList` / `TaskGet` to understand team state at task start |
 | **Impact Analysis** | Identifies which peers are affected by your work |
-| **Direct Communication** | Messages peers directly for info exchange, reviews, handoffs |
+| **Direct Communication** | Uses `SendMessage` to contact peers directly for info exchange, reviews, handoffs |
 | **Message Discipline** | Blocks thank-you loops and empty acknowledgments |
 
 ## Anti-Loop Rules
@@ -49,18 +49,24 @@ curl -sL https://raw.githubusercontent.com/whalstndla/team-awareness-skill/main/
 For best results, also add this to your global `~/.claude/CLAUDE.md`:
 
 ```markdown
-# Team Communication Protocol
+# Team Communication Protocol (applies to all team agents)
+
+## Model Selection
+- Use the model specified in the user's prompt if provided
+- Otherwise, proceed with the user's default model (omit model parameter)
 
 ## Required at Task Start
-1. Read `~/.claude/teams/{teamName}/config.json` — identify all teammates
-2. Read `~/.claude/teams/{teamName}/tasks/*.json` — identify who's doing what
-3. Read `~/.claude/teams/{teamName}/inboxes/{myName}.json` — check messages
+1. **Call `TaskList`** — identify all tasks, owners, statuses, and dependencies
+2. **Analyze dependencies** — which tasks block yours, which blockers your completion resolves
+3. **Check delivered messages** — respond to messages auto-delivered via `SendMessage`
 
 ## Peer-to-Peer Rules
-- Message relevant members directly — do NOT route through leader
-- When your task completion unblocks another task → notify the owner directly
+- **Use `SendMessage` to contact relevant members directly** — do NOT route through leader
+- When your completion unblocks another task → notify that task's owner directly
 - When you need another member's output → ask them directly
-- Report to leader ONLY for blockers, schedule issues, or team decisions
+- When modifying the same file/module as another member → coordinate directly
+- **Report to leader ONLY for blockers, schedule issues, or team decisions**
+- **No gratitude/encouragement-only messages** — don't send unless it contains new info, a question, or a deliverable
 ```
 
 ## License
